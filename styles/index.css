@@ -1,0 +1,41 @@
+:root {
+    --panel-length: 300px;
+    --saved-panel-length: 300px;
+}
+
+html {
+    background-color: darkslategray;
+}
+body {
+    margin: 0px;
+}
+
+.container {
+    display: flex;
+    flex-direction: row;
+}
+
+.canvas-container {
+    background-color: midnightblue;
+    height: 100vh;
+    width: calc(100vw - var(--panel-length));
+}
+.canvas-container canvas {
+    width: 100%;
+    height: 100%;
+}
+
+@media only screen and (orientation: portrait) {
+    .container {
+        flex-direction: column;
+    }
+    .canvas-container {
+        width: 100vw;
+        height: calc(100vh - var(--panel-length));
+    }
+    .equation-panel {
+        bottom: 0px;
+        width: 100vw;
+        height: var(--panel-length);
+    }
+}

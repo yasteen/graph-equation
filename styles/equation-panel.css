@@ -1,0 +1,35 @@
+.equation-panel {
+    background-color: beige;
+    position: fixed;
+    right: 0px;
+    height: 100vh;
+    width: var(--panel-length);
+}
+.equation-panel-top {
+    background-color: gray;
+    height: 50px;
+}
+.equation-panel-hide {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 50px;
+    width: 50px;
+    font-size: 30px;
+    transform: rotate(-90deg);
+}
+.equation-panel-hide:hover {
+    background-color: aliceblue;
+}
+
+@media only screen and (orientation: portrait) {
+    .equation-panel {
+        bottom: 0px;
+        width: 100vw;
+        height: var(--panel-length);
+    }
+    .equation-panel-hide {
+        transform: rotate(0deg);
+    }
+}
