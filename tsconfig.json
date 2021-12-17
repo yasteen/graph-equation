@@ -1,0 +1,12 @@
+{
+    "compilerOptions": {
+        "target": "ES5",
+        "removeComments": true,
+        "outFile": "./public/scripts/index.js",
+        "module": "AMD",
+        "rootDir": "./src/"
+    },
+    "include": [
+        "src/**/*"
+    ],
+}

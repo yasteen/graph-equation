@@ -1,15 +1,16 @@
 .equation-panel {
-    background-color: beige;
+    background-color: var(--side-panel);
     position: fixed;
     right: 0px;
     height: 100vh;
     width: var(--panel-length);
 }
 .equation-panel-top {
-    background-color: gray;
+    background-color: var(--side-panel-top);
     height: 50px;
 }
 .equation-panel-hide {
+    background-color: var(--side-panel-top);
     position: absolute;
     display: flex;
     align-items: center;
@@ -18,9 +19,11 @@
     width: 50px;
     font-size: 30px;
     transform: rotate(-90deg);
+    left: -50px;
+    color: var(--light-text);
 }
 .equation-panel-hide:hover {
-    background-color: aliceblue;
+    background-color: var(--side-panel-top-hover);
 }
 
 @media only screen and (orientation: portrait) {
@@ -31,5 +34,7 @@
     }
     .equation-panel-hide {
         transform: rotate(0deg);
+        left: 0px;
+        top: -50px;
     }
 }
