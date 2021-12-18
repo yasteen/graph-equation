@@ -1,11 +1,14 @@
 {
     "compilerOptions": {
-        "target": "ES5",
+        "target": "ES2015",
         "removeComments": true,
         "outFile": "./public/scripts/index.js",
         "module": "AMD",
-        "rootDir": "./src/"
+        "rootDir": "./src/",
     },
+    "files": [
+        "src/types/global.d.ts"
+    ],
     "include": [
         "src/**/*"
     ],
