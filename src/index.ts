@@ -1,26 +1,22 @@
 import { resizeCanvas } from "./canvas";
-document.documentElement.className = "dark";
+const initialize = () => {
+    // Document colour scheme
+    document.documentElement.className = "dark";
+    // Set up canvas
+    var doResize: NodeJS.Timeout;
+    new ResizeObserver(() => {
+        clearTimeout(doResize);
+        doResize = setTimeout(resizeCanvas, 100);
+    }).observe(document.querySelector("canvas"));
+    resizeCanvas();
 
-resizeCanvas();
-// On window resize
-(() => {
-    var throttled = false;
-    var timeout: false | number = false;
-    window.addEventListener("resize", () => {
-        if (!throttled) {
-            if (timeout !== false) clearTimeout(timeout);
-            timeout = setTimeout(() => {
-                onResize();
-                console.log("resize");
-            }, 200);
-            throttled = true;
-            setTimeout(() => {
-                throttled = false;
-                console.log("damn");
-            }, 200);
-        }
+    const go = new Go();
+    WebAssembly.instantiateStreaming(
+        fetch("scripts/main.wasm"),
+        go.importObject
+    ).then((result) => {
+        go.run(result.instance);
     });
-    const onResize = () => {
-        resizeCanvas();
-    };
-})();
+};
+
+initialize();
