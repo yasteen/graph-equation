@@ -20,7 +20,6 @@ func graph(this js.Value, args []js.Value) interface{} {
 }
 
 func main() {
-	println("HI")
 	c := make(chan int)
 	js.Global().Set("graph", js.FuncOf(graph))
 	<-c

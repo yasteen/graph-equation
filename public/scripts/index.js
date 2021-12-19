@@ -29,10 +29,7 @@ define("index", ["require", "exports", "canvas"], function (require, exports, ca
         }).observe(document.querySelector("canvas"));
         (0, canvas_1.resizeCanvas)();
         const go = new Go();
-        fetch("scripts/main.wasm")
-            .then((response) => response.arrayBuffer())
-            .then((bytes) => WebAssembly.instantiate(bytes, go.importObject))
-            .then((result) => {
+        WebAssembly.instantiateStreaming(fetch("scripts/main.wasm"), go.importObject).then((result) => {
             go.run(result.instance);
         });
     };

@@ -11,12 +11,12 @@ const initialize = () => {
     resizeCanvas();
 
     const go = new Go();
-    fetch("scripts/main.wasm")
-        .then((response) => response.arrayBuffer())
-        .then((bytes) => WebAssembly.instantiate(bytes, go.importObject))
-        .then((result) => {
-            go.run(result.instance);
-        });
+    WebAssembly.instantiateStreaming(
+        fetch("scripts/main.wasm"),
+        go.importObject
+    ).then((result) => {
+        go.run(result.instance);
+    });
 };
 
 initialize();
