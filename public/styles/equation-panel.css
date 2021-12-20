@@ -5,6 +5,8 @@
     height: 100vh;
     width: var(--panel-length);
 }
+
+/* Top panel */
 .equation-panel-top {
     background-color: var(--side-panel-top);
     height: 50px;
@@ -25,7 +27,29 @@
 .equation-panel-hide:hover {
     background-color: var(--side-panel-top-hover);
 }
+#equation-panel-top-clear {
+    font-size: x-large;
+    margin: 5px;
+}
 
+/* Individual Equation */
+.equations-container {
+    display: flex;
+    flex-direction: column;
+}
+.equation {
+    padding: 10px;
+    width: 100%;
+}
+.equation input {
+    font-size: xx-large;
+    margin-right: 20px;
+}
+.equation button {
+    font-size: xx-large;
+}
+
+/* Screen-size adjustments */
 @media only screen and (orientation: portrait) {
     .equation-panel {
         bottom: 0px;
