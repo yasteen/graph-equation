@@ -14,7 +14,8 @@ func graph(this js.Value, args []js.Value) interface{} {
 	variableName := args[4].String()
 	ans, err := real.MapValues(expression, *real.NewRealInterval(start, step, end), variableName)
 	if err != nil {
-		panic(err)
+		alert := js.Global().Get("alert")
+		alert.Invoke("Error: " + err.Error())
 	}
 	return ans
 }

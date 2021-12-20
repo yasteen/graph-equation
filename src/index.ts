@@ -1,16 +1,29 @@
-import { resizeCanvas } from "./canvas";
+import { resetAndDrawGrid, Graph, newGraph, runGraph } from "./graph";
 const initialize = () => {
     // Document colour scheme
     document.documentElement.className = "dark";
 
-    // Set up canvas
-    var doResize: NodeJS.Timeout;
-    new ResizeObserver(() => {
-        clearTimeout(doResize);
-        doResize = setTimeout(resizeCanvas, 100);
-    }).observe(document.querySelector("canvas"));
-    resizeCanvas();
+    const graph = newGraph(document.querySelector("canvas"));
+    initWasm(graph);
 
+    setUpElementEvents(graph);
+};
+
+const initWasm = (graph: Graph) => {
+    const go = new Go();
+    WebAssembly.instantiateStreaming(
+        fetch("scripts/main.wasm", {
+            headers: {
+                "Content-Security-Policy": "script-src self;",
+            },
+        }),
+        go.importObject
+    ).then((result) => {
+        go.run(result.instance);
+    });
+};
+
+const setUpElementEvents = (graph: Graph) => {
     // Set up button onclicks
     const eqPanelButton = document.getElementById(
         "equation-panel-hide"
@@ -29,18 +42,49 @@ const initialize = () => {
         }
     });
 
-    // Set up WASM
-    const go = new Go();
-    WebAssembly.instantiateStreaming(
-        fetch("scripts/main.wasm", {
-            headers: {
-                "Content-Security-Policy": "script-src self;",
-            },
-        }),
-        go.importObject
-    ).then((result) => {
-        go.run(result.instance);
+    // Set up textField events
+    const minX = document.getElementById("minX") as HTMLInputElement;
+    const maxX = document.getElementById("maxX") as HTMLInputElement;
+    const minY = document.getElementById("minY") as HTMLInputElement;
+    const maxY = document.getElementById("maxY") as HTMLInputElement;
+    // minX.addEventListener("change", onHandle)
+    document
+        .getElementById("equation-panel-top-clear")
+        .addEventListener("click", () => resetAndDrawGrid(graph));
+    document
+        .getElementById("equation-panel-top-add")
+        .addEventListener("click", () => createEquation(graph));
+
+    // Set up equation graphing
+    createEquation(graph);
+};
+
+const createEquation = (graph: Graph) => {
+    const id = graph.equations.length;
+    const eqnContainer = document.getElementById(
+        "equations-container"
+    ) as HTMLDivElement;
+    const newEqn = document.createElement("div");
+    const graphButton = document.createElement("button");
+    const graphField = document.createElement("input");
+    newEqn.className = "equation";
+    newEqn.id = "equation-" + id;
+
+    const graphCallback = () => {
+        graph.equations[id] = graphField.value;
+        runGraph(graph, id);
+    };
+
+    graphButton.addEventListener("click", graphCallback);
+    graphButton.innerText = "Graph";
+    graphField.addEventListener("keypress", (event) => {
+        if (event.key === "Enter") graphCallback();
     });
+
+    newEqn.appendChild(graphField);
+    newEqn.appendChild(graphButton);
+    eqnContainer.appendChild(newEqn);
+    graph.equations.push("");
 };
 
 initialize();
