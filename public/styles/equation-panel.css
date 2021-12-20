@@ -27,8 +27,8 @@
 .equation-panel-hide:hover {
     background-color: var(--side-panel-top-hover);
 }
-#equation-panel-top-clear {
-    font-size: x-large;
+.equation-panel-top-button {
+    font-size: medium;
     margin: 5px;
 }
 

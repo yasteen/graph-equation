@@ -3,9 +3,9 @@ export interface Graph {
     maxX: number;
     minY: number;
     maxY: number;
-    equation: string;
+    equations: string[];
     canvas: HTMLCanvasElement;
-    outputValues: number[];
+    outputValues: { [index: number]: number[] };
 }
 
 // Constructs a new Graph object
@@ -15,9 +15,9 @@ export const newGraph = (canvas: HTMLCanvasElement) => {
         maxX: 2,
         minY: -2,
         maxY: 2,
-        equation: "0",
+        equations: [],
         canvas: canvas,
-        outputValues: null,
+        outputValues: [],
     };
 
     var doResize: NodeJS.Timeout;
@@ -30,17 +30,17 @@ export const newGraph = (canvas: HTMLCanvasElement) => {
 };
 
 // Runs the WASM function on the given equation
-export const runGraph = (graph: Graph) => {
+export const runGraph = (graph: Graph, index: number) => {
     if (typeof window["graph"] === "function") {
         const step = getStep(graph);
-        graph.outputValues = window["graph"](
-            graph.equation,
+        graph.outputValues[index] = window["graph"](
+            graph.equations[index],
             graph.minX,
             step,
             graph.maxX,
             "x"
         );
-        redraw(graph);
+        drawEqn(graph, index);
     } else {
         console.error("Failed to detect WASM graph function");
     }
@@ -48,7 +48,9 @@ export const runGraph = (graph: Graph) => {
 
 export const redraw = (graph: Graph) => {
     resetAndDrawGrid(graph);
-    drawEqn(graph);
+    for (const i of Object.keys(graph.outputValues)) {
+        drawEqn(graph, Number(i));
+    }
 };
 
 // Clears canvas, and draws axes and grid
@@ -71,36 +73,38 @@ export const resetAndDrawGrid = (graph: Graph) => {
 };
 
 // Graphs the equation
-export const drawEqn = (graph: Graph) => {
-    if (graph.outputValues) {
-        const ctx = graph.canvas.getContext("2d");
-        const [_, startY] = coordToGraph(
-            graph.minX,
-            graph.outputValues[0],
-            graph
-        );
-        let drawing = false;
-        if (!isNaN(startY)) {
-            drawing = true;
-            ctx.beginPath();
-            ctx.moveTo(0, startY);
-        }
-        const step = graph.canvas.width / graph.outputValues.length;
-        let curX = 0;
-        for (const curY of graph.outputValues) {
-            const [_, y] = coordToGraph(curX, curY, graph);
-            if (isNaN(y)) {
-                if (drawing) ctx.stroke();
-                drawing = false;
-            } else {
-                if (!drawing) ctx.beginPath();
-                ctx.lineTo(curX, isNaN(y) ? coordToGraph(0, 0, graph)[1] : y);
-                drawing = true;
-            }
-            curX += step;
-        }
-        ctx.stroke();
+export const drawEqn = (graph: Graph, index: number) => {
+    if (!graph.outputValues[index]) {
+        return;
     }
+
+    const ctx = graph.canvas.getContext("2d");
+    const [_, startY] = coordToGraph(
+        graph.minX,
+        graph.outputValues[index][0],
+        graph
+    );
+    let drawing = false;
+    if (!isNaN(startY)) {
+        drawing = true;
+        ctx.beginPath();
+        ctx.moveTo(0, startY);
+    }
+    const step = graph.canvas.width / graph.outputValues[index].length;
+    let curX = 0;
+    for (const curY of graph.outputValues[index]) {
+        const [_, y] = coordToGraph(curX, curY, graph);
+        if (isNaN(y)) {
+            if (drawing) ctx.stroke();
+            drawing = false;
+        } else {
+            if (!drawing) ctx.beginPath();
+            ctx.lineTo(curX, isNaN(y) ? coordToGraph(0, 0, graph)[1] : y);
+            drawing = true;
+        }
+        curX += step;
+    }
+    ctx.stroke();
 };
 
 // ** Helpers **

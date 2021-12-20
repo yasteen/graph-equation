@@ -8,9 +8,9 @@ define("graph", ["require", "exports"], function (require, exports) {
             maxX: 2,
             minY: -2,
             maxY: 2,
-            equation: "0",
+            equations: [],
             canvas: canvas,
-            outputValues: null,
+            outputValues: [],
         };
         var doResize;
         new ResizeObserver(() => {
@@ -21,11 +21,11 @@ define("graph", ["require", "exports"], function (require, exports) {
         return graph;
     };
     exports.newGraph = newGraph;
-    const runGraph = (graph) => {
+    const runGraph = (graph, index) => {
         if (typeof window["graph"] === "function") {
             const step = getStep(graph);
-            graph.outputValues = window["graph"](graph.equation, graph.minX, step, graph.maxX, "x");
-            (0, exports.redraw)(graph);
+            graph.outputValues[index] = window["graph"](graph.equations[index], graph.minX, step, graph.maxX, "x");
+            (0, exports.drawEqn)(graph, index);
         }
         else {
             console.error("Failed to detect WASM graph function");
@@ -34,7 +34,9 @@ define("graph", ["require", "exports"], function (require, exports) {
     exports.runGraph = runGraph;
     const redraw = (graph) => {
         (0, exports.resetAndDrawGrid)(graph);
-        (0, exports.drawEqn)(graph);
+        for (const i of Object.keys(graph.outputValues)) {
+            (0, exports.drawEqn)(graph, Number(i));
+        }
     };
     exports.redraw = redraw;
     const resetAndDrawGrid = (graph) => {
@@ -53,35 +55,36 @@ define("graph", ["require", "exports"], function (require, exports) {
         ctx.stroke();
     };
     exports.resetAndDrawGrid = resetAndDrawGrid;
-    const drawEqn = (graph) => {
-        if (graph.outputValues) {
-            const ctx = graph.canvas.getContext("2d");
-            const [_, startY] = coordToGraph(graph.minX, graph.outputValues[0], graph);
-            let drawing = false;
-            if (!isNaN(startY)) {
-                drawing = true;
-                ctx.beginPath();
-                ctx.moveTo(0, startY);
-            }
-            const step = graph.canvas.width / graph.outputValues.length;
-            let curX = 0;
-            for (const curY of graph.outputValues) {
-                const [_, y] = coordToGraph(curX, curY, graph);
-                if (isNaN(y)) {
-                    if (drawing)
-                        ctx.stroke();
-                    drawing = false;
-                }
-                else {
-                    if (!drawing)
-                        ctx.beginPath();
-                    ctx.lineTo(curX, isNaN(y) ? coordToGraph(0, 0, graph)[1] : y);
-                    drawing = true;
-                }
-                curX += step;
-            }
-            ctx.stroke();
+    const drawEqn = (graph, index) => {
+        if (!graph.outputValues[index]) {
+            return;
         }
+        const ctx = graph.canvas.getContext("2d");
+        const [_, startY] = coordToGraph(graph.minX, graph.outputValues[index][0], graph);
+        let drawing = false;
+        if (!isNaN(startY)) {
+            drawing = true;
+            ctx.beginPath();
+            ctx.moveTo(0, startY);
+        }
+        const step = graph.canvas.width / graph.outputValues[index].length;
+        let curX = 0;
+        for (const curY of graph.outputValues[index]) {
+            const [_, y] = coordToGraph(curX, curY, graph);
+            if (isNaN(y)) {
+                if (drawing)
+                    ctx.stroke();
+                drawing = false;
+            }
+            else {
+                if (!drawing)
+                    ctx.beginPath();
+                ctx.lineTo(curX, isNaN(y) ? coordToGraph(0, 0, graph)[1] : y);
+                drawing = true;
+            }
+            curX += step;
+        }
+        ctx.stroke();
     };
     exports.drawEqn = drawEqn;
     const resizeGraph = (graph) => {
@@ -117,7 +120,6 @@ define("index", ["require", "exports", "graph"], function (require, exports, gra
             },
         }), go.importObject).then((result) => {
             go.run(result.instance);
-            (0, graph_1.runGraph)(graph);
         });
     };
     const setUpElementEvents = (graph) => {
@@ -139,19 +141,34 @@ define("index", ["require", "exports", "graph"], function (require, exports, gra
         const maxY = document.getElementById("maxY");
         document
             .getElementById("equation-panel-top-clear")
-            .addEventListener("click", () => {
-            (0, graph_1.resetAndDrawGrid)(graph);
-        });
-        const eqn1 = document.getElementById("equation-1");
+            .addEventListener("click", () => (0, graph_1.resetAndDrawGrid)(graph));
+        document
+            .getElementById("equation-panel-top-add")
+            .addEventListener("click", () => createEquation(graph));
+        createEquation(graph);
+    };
+    const createEquation = (graph) => {
+        const id = graph.equations.length;
+        const eqnContainer = document.getElementById("equations-container");
+        const newEqn = document.createElement("div");
+        const graphButton = document.createElement("button");
+        const graphField = document.createElement("input");
+        newEqn.className = "equation";
+        newEqn.id = "equation-" + id;
         const graphCallback = () => {
-            graph.equation = eqn1.querySelector("input").value;
-            (0, graph_1.runGraph)(graph);
+            graph.equations[id] = graphField.value;
+            (0, graph_1.runGraph)(graph, id);
         };
-        eqn1.querySelector("button").addEventListener("click", graphCallback);
-        eqn1.querySelector("input").addEventListener("keypress", (event) => {
+        graphButton.addEventListener("click", graphCallback);
+        graphButton.innerText = "Graph";
+        graphField.addEventListener("keypress", (event) => {
             if (event.key === "Enter")
                 graphCallback();
         });
+        newEqn.appendChild(graphField);
+        newEqn.appendChild(graphButton);
+        eqnContainer.appendChild(newEqn);
+        graph.equations.push("");
     };
     initialize();
 });

@@ -20,7 +20,6 @@ const initWasm = (graph: Graph) => {
         go.importObject
     ).then((result) => {
         go.run(result.instance);
-        runGraph(graph);
     });
 };
 
@@ -51,20 +50,41 @@ const setUpElementEvents = (graph: Graph) => {
     // minX.addEventListener("change", onHandle)
     document
         .getElementById("equation-panel-top-clear")
-        .addEventListener("click", () => {
-            resetAndDrawGrid(graph);
-        });
+        .addEventListener("click", () => resetAndDrawGrid(graph));
+    document
+        .getElementById("equation-panel-top-add")
+        .addEventListener("click", () => createEquation(graph));
 
     // Set up equation graphing
-    const eqn1 = document.getElementById("equation-1") as HTMLDivElement;
+    createEquation(graph);
+};
+
+const createEquation = (graph: Graph) => {
+    const id = graph.equations.length;
+    const eqnContainer = document.getElementById(
+        "equations-container"
+    ) as HTMLDivElement;
+    const newEqn = document.createElement("div");
+    const graphButton = document.createElement("button");
+    const graphField = document.createElement("input");
+    newEqn.className = "equation";
+    newEqn.id = "equation-" + id;
+
     const graphCallback = () => {
-        graph.equation = eqn1.querySelector("input").value;
-        runGraph(graph);
+        graph.equations[id] = graphField.value;
+        runGraph(graph, id);
     };
-    eqn1.querySelector("button").addEventListener("click", graphCallback);
-    eqn1.querySelector("input").addEventListener("keypress", (event) => {
+
+    graphButton.addEventListener("click", graphCallback);
+    graphButton.innerText = "Graph";
+    graphField.addEventListener("keypress", (event) => {
         if (event.key === "Enter") graphCallback();
     });
+
+    newEqn.appendChild(graphField);
+    newEqn.appendChild(graphButton);
+    eqnContainer.appendChild(newEqn);
+    graph.equations.push("");
 };
 
 initialize();
