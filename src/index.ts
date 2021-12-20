@@ -1,16 +1,30 @@
-import { resizeCanvas } from "./canvas";
+import { resetAndDrawGrid, Graph, newGraph, runGraph } from "./graph";
 const initialize = () => {
     // Document colour scheme
     document.documentElement.className = "dark";
 
-    // Set up canvas
-    var doResize: NodeJS.Timeout;
-    new ResizeObserver(() => {
-        clearTimeout(doResize);
-        doResize = setTimeout(resizeCanvas, 100);
-    }).observe(document.querySelector("canvas"));
-    resizeCanvas();
+    const graph = newGraph(document.querySelector("canvas"));
+    initWasm(graph);
 
+    setUpElementEvents(graph);
+};
+
+const initWasm = (graph: Graph) => {
+    const go = new Go();
+    WebAssembly.instantiateStreaming(
+        fetch("scripts/main.wasm", {
+            headers: {
+                "Content-Security-Policy": "script-src self;",
+            },
+        }),
+        go.importObject
+    ).then((result) => {
+        go.run(result.instance);
+        runGraph(graph);
+    });
+};
+
+const setUpElementEvents = (graph: Graph) => {
     // Set up button onclicks
     const eqPanelButton = document.getElementById(
         "equation-panel-hide"
@@ -29,17 +43,27 @@ const initialize = () => {
         }
     });
 
-    // Set up WASM
-    const go = new Go();
-    WebAssembly.instantiateStreaming(
-        fetch("scripts/main.wasm", {
-            headers: {
-                "Content-Security-Policy": "script-src self;",
-            },
-        }),
-        go.importObject
-    ).then((result) => {
-        go.run(result.instance);
+    // Set up textField events
+    const minX = document.getElementById("minX") as HTMLInputElement;
+    const maxX = document.getElementById("maxX") as HTMLInputElement;
+    const minY = document.getElementById("minY") as HTMLInputElement;
+    const maxY = document.getElementById("maxY") as HTMLInputElement;
+    // minX.addEventListener("change", onHandle)
+    document
+        .getElementById("equation-panel-top-clear")
+        .addEventListener("click", () => {
+            resetAndDrawGrid(graph);
+        });
+
+    // Set up equation graphing
+    const eqn1 = document.getElementById("equation-1") as HTMLDivElement;
+    const graphCallback = () => {
+        graph.equation = eqn1.querySelector("input").value;
+        runGraph(graph);
+    };
+    eqn1.querySelector("button").addEventListener("click", graphCallback);
+    eqn1.querySelector("input").addEventListener("keypress", (event) => {
+        if (event.key === "Enter") graphCallback();
     });
 };
 
