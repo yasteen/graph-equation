@@ -12,7 +12,11 @@ const initialize = () => {
 
     const go = new Go();
     WebAssembly.instantiateStreaming(
-        fetch("scripts/main.wasm"),
+        fetch("scripts/main.wasm", {
+            headers: {
+                "Content-Security-Policy": "script-src self;",
+            },
+        }),
         go.importObject
     ).then((result) => {
         go.run(result.instance);
