@@ -10,6 +10,8 @@
     "typescript": "^4.5.4"
   },
   "scripts": {
+    "build-all": "yarn build; cd webassembly; ./build.sh",
+    "build-go": "GOOS=js GOARCH=wasm go build -o ./public/scripts/main.wasm ./webassembly",
     "build": "tsc",
     "build-watch": "tsc -w"
   },
