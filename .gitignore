@@ -1,3 +1,7 @@
+# Build outputs
+public/scripts/index.js
+public/scripts/main.wasm
+
 # Logs
 logs
 *.log
