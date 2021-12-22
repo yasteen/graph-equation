@@ -1,8 +1,10 @@
 :root {
-    --panel-length: 300px;
-    --saved-panel-length: 300px;
+    --panel-length: 400px;
+    --saved-panel-length: 400px;
     --light-text: #f3f3f3;
     --dark-text: #001111;
+    --light-line: #999900;
+    --dark-line: #222200;
 }
 
 :root.light {
@@ -12,19 +14,30 @@
     --side-panel-top-hover: #8383eb;
     --main-text: var(--light-text);
     --contrast-text: var(--dark-text);
+    --canvas-line: var(--dark-line);
 }
 
 :root.dark {
-    --bg-color: #333333;
+    --bg-color: #111111;
     --side-panel: #222266;
     --side-panel-top: #000033;
     --side-panel-top-hover: rgb(102, 102, 200);
     --main-text: var(--dark-text);
     --contrast-text: var(--light-text);
+    --canvas-line: var(--light-line);
 }
 
 body {
     margin: 0px;
+}
+
+.icon {
+    position: fixed;
+    width: 0px;
+}
+.icon div {
+    padding: 5px;
+    font-size: 25pt;
 }
 
 .container {
@@ -33,16 +46,16 @@ body {
 }
 
 .canvas-container {
-    background-color: var(--bg-color);
     height: 100vh;
     width: calc(100vw - var(--panel-length));
 }
-.canvas-container canvas {
-    width: 100%;
-    height: 100%;
+canvas {
+    background-color: var(--bg-color);
+    width: calc(100% - var(--panel-length));
+    height: 100vh;
 }
 
-@media only screen and (orientation: portrait) {
+/* @media only screen and (orientation: portrait) {
     .container {
         flex-direction: column;
     }
@@ -55,4 +68,14 @@ body {
         width: 100vw;
         height: var(--panel-length);
     }
+} */
+
+.noselect {
+    -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+    -khtml-user-select: none; /* Konqueror HTML */
+    -moz-user-select: none; /* Old versions of Firefox */
+    -ms-user-select: none; /* Internet Explorer/Edge */
+    user-select: none; /* Non-prefixed version, currently
+                                  supported by Chrome, Edge, Opera and Firefox */
 }
