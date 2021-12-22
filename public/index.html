@@ -16,33 +16,45 @@
         <script src="scripts/index.js"></script>
     </head>
     <body>
+        <div class="icon noselect">
+            <div id="icon-toggle-mode">🌙</div>
+        </div>
         <div class="container">
-            <div class="canvas-container">
-                <canvas id="canvas"></canvas>
-            </div>
-            <div class="equation-panel">
-                <div class="equation-panel-top">
-                    <div class="equation-panel-hide" id="equation-panel-hide">
-                        ▼
-                    </div>
-                    <!-- <input type="number" id="minX" />
+            <!-- <div class="canvas-container" id="canvas-container"> -->
+            <canvas id="canvas"></canvas>
+            <!-- </div> -->
+            <div class="equation-panel" id="equation-panel">
+                <div class="equation-resize-bar"></div>
+                <div class="equation-main">
+                    <div class="equation-panel-top noselect">
+                        <!-- <div
+                            class="equation-panel-hide"
+                            id="equation-panel-hide"
+                        >
+                            ▼
+                        </div> -->
+                        <!-- <input type="number" id="minX" />
                     <input type="number" id="maxX" />
                     <input type="number" id="minY" />
                     <input type="number" id="maxY" /> -->
-                    <button
-                        id="equation-panel-top-clear"
-                        class="equation-panel-top-button"
-                    >
-                        Clear Graph
-                    </button>
-                    <button
-                        id="equation-panel-top-add"
-                        class="equation-panel-top-button"
-                    >
-                        Add New Equation
-                    </button>
+                        <button
+                            id="equation-panel-top-clear"
+                            class="equation-panel-top-button"
+                        >
+                            Clear Graph
+                        </button>
+                        <button
+                            id="equation-panel-top-add"
+                            class="equation-panel-top-button"
+                        >
+                            Add New Equation
+                        </button>
+                    </div>
+                    <div
+                        class="equations-container"
+                        id="equations-container"
+                    ></div>
                 </div>
-                <div class="equations-container" id="equations-container"></div>
             </div>
         </div>
         <script>

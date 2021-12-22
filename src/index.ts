@@ -1,4 +1,5 @@
-import { resetAndDrawGrid, Graph, newGraph, runGraph } from "./graph";
+import { resetAndDrawGrid, Graph, newGraph, runGraph, redraw } from "./graph";
+
 const initialize = () => {
     // Document colour scheme
     document.documentElement.className = "dark";
@@ -25,22 +26,42 @@ const initWasm = (graph: Graph) => {
 
 const setUpElementEvents = (graph: Graph) => {
     // Set up button onclicks
-    const eqPanelButton = document.getElementById(
-        "equation-panel-hide"
+
+    const iconToggleMode = document.getElementById(
+        "icon-toggle-mode"
     ) as HTMLDivElement;
-    eqPanelButton.addEventListener("click", (_ev) => {
-        const r = document.querySelector("html");
-        if (r.style.getPropertyValue("--panel-length") === "0px") {
-            r.style.setProperty(
-                "--panel-length",
-                r.style.getPropertyValue("--saved-panel-length")
-            );
-            eqPanelButton.innerHTML = "▼";
+    iconToggleMode.addEventListener("click", (_ev) => {
+        var theme: "light" | "dark";
+        if (document.documentElement.className === "dark") {
+            theme = "light";
+            iconToggleMode.innerText = "☀️";
         } else {
-            r.style.setProperty("--panel-length", "0px");
-            eqPanelButton.innerHTML = "▲";
+            theme = "dark";
+            iconToggleMode.innerText = "🌙";
         }
+        document.documentElement.className = theme;
+        redraw(graph);
     });
+
+    // const eqPanelButton = document.getElementById(
+    //     "equation-panel-hide"
+    // ) as HTMLDivElement;
+    // eqPanelButton.addEventListener("click", (_ev) => {
+    //     const r = document.querySelector("html");
+    //     if (r.style.getPropertyValue("--panel-length") === "0px") {
+    //         r.style.setProperty(
+    //             "--panel-length",
+    //             r.style.getPropertyValue("--saved-panel-length")
+    //         );
+    //         eqPanelButton.innerHTML = "▼";
+    //     } else {
+    //         r.style.setProperty("--panel-length", "0px");
+    //         eqPanelButton.innerHTML = "▲";
+    //     }
+    // });
+
+    // Set up resizing
+    setupResizeBar(graph);
 
     // Set up textField events
     const minX = document.getElementById("minX") as HTMLInputElement;
@@ -59,6 +80,36 @@ const setUpElementEvents = (graph: Graph) => {
     createEquation(graph);
 };
 
+const setupResizeBar = (graph: Graph) => {
+    const BORDER_WIDTH = 4;
+    const sideBar = document.getElementById("equation-panel") as HTMLDivElement;
+
+    let m_pos: number;
+    const resize = (e: MouseEvent) => {
+        const dx = m_pos - e.x;
+        m_pos = e.x;
+        sideBar.style.width =
+            parseInt(getComputedStyle(sideBar, "").width) + dx + "px";
+        graph.canvas.style.width =
+            parseInt(getComputedStyle(graph.canvas, "").width) - dx + "px";
+    };
+
+    sideBar.addEventListener(
+        "mousedown",
+        (e) => {
+            if (e.offsetX < BORDER_WIDTH) {
+                m_pos = e.x;
+                document.addEventListener("mousemove", resize, false);
+            }
+        },
+        false
+    );
+
+    document.addEventListener("mouseup", () => {
+        document.removeEventListener("mousemove", resize, false);
+    });
+};
+
 const createEquation = (graph: Graph) => {
     const id = graph.equations.length;
     const eqnContainer = document.getElementById(
@@ -67,12 +118,13 @@ const createEquation = (graph: Graph) => {
     const newEqn = document.createElement("div");
     const graphButton = document.createElement("button");
     const graphField = document.createElement("input");
-    newEqn.className = "equation";
+    newEqn.className = "equation noselect";
     newEqn.id = "equation-" + id;
 
     const graphCallback = () => {
         graph.equations[id] = graphField.value;
         runGraph(graph, id);
+        redraw(graph);
     };
 
     graphButton.addEventListener("click", graphCallback);

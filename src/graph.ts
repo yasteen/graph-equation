@@ -11,10 +11,10 @@ export interface Graph {
 // Constructs a new Graph object
 export const newGraph = (canvas: HTMLCanvasElement) => {
     const graph: Graph = {
-        minX: -2,
-        maxX: 2,
-        minY: -2,
-        maxY: 2,
+        minX: -1,
+        maxX: 1,
+        minY: -1,
+        maxY: 1,
         equations: [],
         canvas: canvas,
         outputValues: [],
@@ -26,12 +26,50 @@ export const newGraph = (canvas: HTMLCanvasElement) => {
         doResize = setTimeout(() => resizeGraph(graph), 100);
     }).observe(canvas);
     resizeGraph(graph);
+    let x: number, y: number;
+    const down = (ev: MouseEvent | TouchEvent) => {
+        if (ev instanceof MouseEvent) {
+            [x, y] = graphToCoord(ev.clientX, ev.clientY, graph);
+        } else {
+            [x, y] = graphToCoord(
+                ev.changedTouches[0].clientX,
+                ev.changedTouches[0].clientY,
+                graph
+            );
+        }
+    };
+    const up = (ev: MouseEvent | TouchEvent) => {
+        if (x === undefined || y === undefined) return;
+        let newX: number, newY: number;
+        if (ev instanceof MouseEvent) {
+            [newX, newY] = graphToCoord(ev.clientX, ev.clientY, graph);
+        } else {
+            [newX, newY] = graphToCoord(
+                ev.changedTouches[0].clientX,
+                ev.changedTouches[0].clientY,
+                graph
+            );
+        }
+        const dx = -(newX - x),
+            dy = -(newY - y);
+        graph.minX += dx;
+        graph.maxX += dx;
+        graph.minY += dy;
+        graph.maxY += dy;
+        runAllGraphs(graph);
+        redraw(graph);
+    };
+    canvas.addEventListener("mousedown", down);
+    canvas.addEventListener("touchstart", down);
+    canvas.addEventListener("mouseup", up);
+    canvas.addEventListener("touchend", up);
     return graph;
 };
 
 // Runs the WASM function on the given equation
 export const runGraph = (graph: Graph, index: number) => {
     if (typeof window["graph"] === "function") {
+        if (graph.equations[index] === "") return;
         const step = getStep(graph);
         graph.outputValues[index] = window["graph"](
             graph.equations[index],
@@ -47,6 +85,9 @@ export const runGraph = (graph: Graph, index: number) => {
 };
 
 export const redraw = (graph: Graph) => {
+    graph.canvas.getContext("2d").strokeStyle = getComputedStyle(
+        document.documentElement
+    ).getPropertyValue("--canvas-line");
     resetAndDrawGrid(graph);
     for (const i of Object.keys(graph.outputValues)) {
         drawEqn(graph, Number(i));
@@ -59,7 +100,6 @@ export const resetAndDrawGrid = (graph: Graph) => {
     ctx.clearRect(0, 0, graph.canvas.width, graph.canvas.height);
     const [xint, yint] = coordToGraph(0, 0, graph);
     ctx.lineWidth = 3;
-    ctx.strokeStyle = "#000000";
 
     ctx.beginPath();
     ctx.moveTo(0, yint);
@@ -107,12 +147,28 @@ export const drawEqn = (graph: Graph, index: number) => {
     ctx.stroke();
 };
 
-// ** Helpers **
+// ***** Helpers *****
+
+// Recalculates for all the graphs
+const runAllGraphs = (graph: Graph) => {
+    for (let i = 0; i < graph.equations.length; i++) runGraph(graph, i);
+};
+
+// Resize proportionally based on given width
+const resizeProportionally = (graph: Graph, halfWidth: number) => {
+    const halfHeight =
+        (halfWidth / (graph.canvas.width || 0)) * graph.canvas.height;
+    graph.minX = -halfWidth;
+    graph.maxX = halfWidth;
+    graph.minY = -halfHeight;
+    graph.maxY = halfHeight;
+};
 
 // Resets the canvas inner size to the outer size
 const resizeGraph = (graph: Graph) => {
     graph.canvas.width = graph.canvas.clientWidth;
     graph.canvas.height = graph.canvas.clientHeight;
+    resizeProportionally(graph, 3);
     redraw(graph);
 };
 
@@ -121,6 +177,13 @@ const coordToGraph = (x: number, y: number, graph: Graph) => {
     return [
         ((x - graph.minX) * graph.canvas.width) / (graph.maxX - graph.minX),
         ((graph.maxY - y) * graph.canvas.height) / (graph.maxY - graph.minY),
+    ];
+};
+
+const graphToCoord = (x: number, y: number, graph: Graph) => {
+    return [
+        (x * (graph.maxX - graph.minX)) / graph.canvas.width + graph.minX,
+        graph.maxY - (y * (graph.maxY - graph.minY)) / graph.canvas.height,
     ];
 };
 

@@ -1,9 +1,10 @@
 .equation-panel {
     background-color: var(--side-panel);
-    position: fixed;
+    position: absolute;
     right: 0px;
-    height: 100vh;
+    height: 100%;
     width: var(--panel-length);
+    /* min-width: 300px; */
 }
 
 /* Top panel */
@@ -32,6 +33,16 @@
     margin: 5px;
 }
 
+/* Resizing side bar */
+.equation-resize-bar {
+    background-color: var(--dark-line);
+    position: absolute;
+    left: -4px;
+    width: 4px;
+    height: 100%;
+    cursor: ew-resize;
+}
+
 /* Individual Equation */
 .equations-container {
     display: flex;
@@ -39,18 +50,20 @@
 }
 .equation {
     padding: 10px;
-    width: 100%;
+    width: calc(100% - 20px);
 }
 .equation input {
     font-size: xx-large;
-    margin-right: 20px;
+    margin-right: 10px;
+    width: calc(100% - 130px);
 }
 .equation button {
     font-size: xx-large;
+    width: 110px;
 }
 
 /* Screen-size adjustments */
-@media only screen and (orientation: portrait) {
+/* @media only screen and (orientation: portrait) {
     .equation-panel {
         bottom: 0px;
         width: 100vw;
@@ -61,4 +74,4 @@
         left: 0px;
         top: -50px;
     }
-}
+} */
