@@ -88,7 +88,7 @@ export const redraw = (graph: Graph) => {
     graph.canvas.getContext("2d").strokeStyle = getComputedStyle(
         document.documentElement
     ).getPropertyValue("--canvas-line");
-    resetAndDrawGrid(graph);
+    resetGrid(graph);
     for (const i of Object.keys(graph.outputValues)) {
         drawEqn(graph, Number(i));
     }
@@ -96,20 +96,11 @@ export const redraw = (graph: Graph) => {
 
 // Clears canvas, and draws axes and grid
 export const resetAndDrawGrid = (graph: Graph) => {
-    const ctx = graph.canvas.getContext("2d");
-    ctx.clearRect(0, 0, graph.canvas.width, graph.canvas.height);
-    const [xint, yint] = coordToGraph(0, 0, graph);
-    ctx.lineWidth = 3;
+    resetGrid(graph);
 
-    ctx.beginPath();
-    ctx.moveTo(0, yint);
-    ctx.lineTo(graph.canvas.width, yint);
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.moveTo(xint, 0);
-    ctx.lineTo(xint, graph.canvas.height);
-    ctx.stroke();
+    Object.keys(graph.outputValues).forEach((key) => {
+        delete graph.outputValues[key];
+    });
 };
 
 // Graphs the equation
@@ -156,12 +147,13 @@ const runAllGraphs = (graph: Graph) => {
 
 // Resize proportionally based on given width
 const resizeProportionally = (graph: Graph, halfWidth: number) => {
+    const mid = (graph.minY + graph.maxY) / 2;
     const halfHeight =
         (halfWidth / (graph.canvas.width || 0)) * graph.canvas.height;
     graph.minX = -halfWidth;
     graph.maxX = halfWidth;
-    graph.minY = -halfHeight;
-    graph.maxY = halfHeight;
+    graph.minY = mid - halfHeight;
+    graph.maxY = mid + halfHeight;
 };
 
 // Resets the canvas inner size to the outer size
@@ -191,4 +183,21 @@ const graphToCoord = (x: number, y: number, graph: Graph) => {
 const getStep = (graph: Graph) => {
     const resolution = 2; // pixels
     return (resolution / graph.canvas.width) * (graph.maxX - graph.minX);
+};
+
+const resetGrid = (graph: Graph) => {
+    const ctx = graph.canvas.getContext("2d");
+    ctx.clearRect(0, 0, graph.canvas.width, graph.canvas.height);
+    const [xint, yint] = coordToGraph(0, 0, graph);
+    ctx.lineWidth = 3;
+
+    ctx.beginPath();
+    ctx.moveTo(0, yint);
+    ctx.lineTo(graph.canvas.width, yint);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(xint, 0);
+    ctx.lineTo(xint, graph.canvas.height);
+    ctx.stroke();
 };
