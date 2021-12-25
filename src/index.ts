@@ -111,7 +111,7 @@ const setupResizeBar = (graph: Graph) => {
 };
 
 const createEquation = (graph: Graph) => {
-    const id = graph.equations.length;
+    const id = graph.currentEquationId;
     const eqnContainer = document.getElementById(
         "equations-container"
     ) as HTMLDivElement;
@@ -136,7 +136,8 @@ const createEquation = (graph: Graph) => {
     newEqn.appendChild(graphField);
     newEqn.appendChild(graphButton);
     eqnContainer.appendChild(newEqn);
-    graph.equations.push("");
+    graph.equations[id] = "";
+    graph.currentEquationId++;
 };
 
 initialize();

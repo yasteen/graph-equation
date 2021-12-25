@@ -3,7 +3,8 @@ export interface Graph {
     maxX: number;
     minY: number;
     maxY: number;
-    equations: string[];
+    equations: { [id: number]: string };
+    currentEquationId: number;
     canvas: HTMLCanvasElement;
     outputValues: { [index: number]: number[] };
 }
@@ -15,16 +16,17 @@ export const newGraph = (canvas: HTMLCanvasElement) => {
         maxX: 1,
         minY: -1,
         maxY: 1,
-        equations: [],
+        equations: {},
+        currentEquationId: 0,
         canvas: canvas,
-        outputValues: [],
+        outputValues: {},
     };
 
-    var doResize: NodeJS.Timeout;
-    new ResizeObserver(() => {
+    var doResize: number;
+    window.addEventListener("resize", () => {
         clearTimeout(doResize);
         doResize = setTimeout(() => resizeGraph(graph), 100);
-    }).observe(canvas);
+    });
     resizeGraph(graph);
     let x: number, y: number;
     const down = (ev: MouseEvent | TouchEvent) => {
@@ -97,7 +99,9 @@ export const redraw = (graph: Graph) => {
 // Clears canvas, and draws axes and grid
 export const resetAndDrawGrid = (graph: Graph) => {
     resetGrid(graph);
-
+    Object.keys(graph.equations).forEach((key) => {
+        delete graph.equations[key];
+    });
     Object.keys(graph.outputValues).forEach((key) => {
         delete graph.outputValues[key];
     });
@@ -142,7 +146,7 @@ export const drawEqn = (graph: Graph, index: number) => {
 
 // Recalculates for all the graphs
 const runAllGraphs = (graph: Graph) => {
-    for (let i = 0; i < graph.equations.length; i++) runGraph(graph, i);
+    for (let i of Object.keys(graph.equations)) runGraph(graph, Number(i));
 };
 
 // Resize proportionally based on given width
