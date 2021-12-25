@@ -1,10 +1,10 @@
-import { resetAndDrawGrid, Graph, newGraph, runGraph, redraw } from "./graph";
+import { Graph } from "./graph";
 
 const initialize = () => {
     // Document colour scheme
     document.documentElement.className = "dark";
 
-    const graph = newGraph(document.querySelector("canvas"));
+    const graph = new Graph(document.querySelector("canvas"));
     initWasm(graph);
 
     setUpElementEvents(graph);
@@ -40,7 +40,7 @@ const setUpElementEvents = (graph: Graph) => {
             iconToggleMode.innerText = "🌙";
         }
         document.documentElement.className = theme;
-        redraw(graph);
+        graph.redraw();
     });
 
     // const eqPanelButton = document.getElementById(
@@ -71,7 +71,7 @@ const setUpElementEvents = (graph: Graph) => {
     // minX.addEventListener("change", onHandle)
     document
         .getElementById("equation-panel-top-clear")
-        .addEventListener("click", () => resetAndDrawGrid(graph));
+        .addEventListener("click", () => graph.resetAndDrawGrid());
     document
         .getElementById("equation-panel-top-add")
         .addEventListener("click", () => createEquation(graph));
@@ -123,8 +123,8 @@ const createEquation = (graph: Graph) => {
 
     const graphCallback = () => {
         graph.equations[id] = graphField.value;
-        runGraph(graph, id);
-        redraw(graph);
+        graph.runGraph(id);
+        graph.redraw();
     };
 
     graphButton.addEventListener("click", graphCallback);

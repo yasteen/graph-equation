@@ -1,4 +1,6 @@
-export interface Graph {
+import { initializeCanvasResizeListeners } from "./eventHandler";
+
+export class Graph {
     minX: number;
     maxX: number;
     minY: number;
@@ -7,201 +9,151 @@ export interface Graph {
     currentEquationId: number;
     canvas: HTMLCanvasElement;
     outputValues: { [index: number]: number[] };
-}
 
-// Constructs a new Graph object
-export const newGraph = (canvas: HTMLCanvasElement) => {
-    const graph: Graph = {
-        minX: -1,
-        maxX: 1,
-        minY: -1,
-        maxY: 1,
-        equations: {},
-        currentEquationId: 0,
-        canvas: canvas,
-        outputValues: {},
-    };
+    constructor(canvas: HTMLCanvasElement) {
+        this.minX = -1;
+        this.maxX = 1;
+        this.minY = -1;
+        this.maxY = 1;
+        this.equations = {};
+        this.currentEquationId = 0;
+        this.canvas = canvas;
+        this.outputValues = {};
 
-    var doResize: number;
-    window.addEventListener("resize", () => {
-        clearTimeout(doResize);
-        doResize = setTimeout(() => resizeGraph(graph), 100);
-    });
-    resizeGraph(graph);
-    let x: number, y: number;
-    const down = (ev: MouseEvent | TouchEvent) => {
-        if (ev instanceof MouseEvent) {
-            [x, y] = graphToCoord(ev.clientX, ev.clientY, graph);
-        } else {
-            [x, y] = graphToCoord(
-                ev.changedTouches[0].clientX,
-                ev.changedTouches[0].clientY,
-                graph
+        initializeCanvasResizeListeners(this);
+    }
+
+    // Runs the WASM function on the given equation
+    runGraph(index: number) {
+        if (typeof window["graph"] === "function") {
+            if (this.equations[index] === "") return;
+            const step = this.getStep();
+            this.outputValues[index] = window["graph"](
+                this.equations[index],
+                this.minX,
+                step,
+                this.maxX,
+                "x"
             );
-        }
-    };
-    const up = (ev: MouseEvent | TouchEvent) => {
-        if (x === undefined || y === undefined) return;
-        let newX: number, newY: number;
-        if (ev instanceof MouseEvent) {
-            [newX, newY] = graphToCoord(ev.clientX, ev.clientY, graph);
+            this.drawEqn(index);
         } else {
-            [newX, newY] = graphToCoord(
-                ev.changedTouches[0].clientX,
-                ev.changedTouches[0].clientY,
-                graph
-            );
+            console.error("Failed to detect WASM graph function");
         }
-        const dx = -(newX - x),
-            dy = -(newY - y);
-        graph.minX += dx;
-        graph.maxX += dx;
-        graph.minY += dy;
-        graph.maxY += dy;
-        runAllGraphs(graph);
-        redraw(graph);
-    };
-    canvas.addEventListener("mousedown", down);
-    canvas.addEventListener("touchstart", down);
-    canvas.addEventListener("mouseup", up);
-    canvas.addEventListener("touchend", up);
-    return graph;
-};
+    }
 
-// Runs the WASM function on the given equation
-export const runGraph = (graph: Graph, index: number) => {
-    if (typeof window["graph"] === "function") {
-        if (graph.equations[index] === "") return;
-        const step = getStep(graph);
-        graph.outputValues[index] = window["graph"](
-            graph.equations[index],
-            graph.minX,
-            step,
-            graph.maxX,
-            "x"
+    redraw() {
+        this.canvas.getContext("2d").strokeStyle = getComputedStyle(
+            document.documentElement
+        ).getPropertyValue("--canvas-line");
+        this.resetGrid();
+        for (const i of Object.keys(this.outputValues)) {
+            this.drawEqn(Number(i));
+        }
+    }
+
+    // Clears canvas, and draws axes and grid
+    resetAndDrawGrid() {
+        this.resetGrid();
+        Object.keys(this.equations).forEach((key) => {
+            delete this.equations[key];
+        });
+        Object.keys(this.outputValues).forEach((key) => {
+            delete this.outputValues[key];
+        });
+    }
+
+    // Graphs the equation
+    drawEqn(index: number) {
+        if (!this.outputValues[index]) return;
+        const ctx = this.canvas.getContext("2d");
+        const [_, startY] = this.coordToGraph(
+            this.minX,
+            this.outputValues[index][0]
         );
-        drawEqn(graph, index);
-    } else {
-        console.error("Failed to detect WASM graph function");
-    }
-};
-
-export const redraw = (graph: Graph) => {
-    graph.canvas.getContext("2d").strokeStyle = getComputedStyle(
-        document.documentElement
-    ).getPropertyValue("--canvas-line");
-    resetGrid(graph);
-    for (const i of Object.keys(graph.outputValues)) {
-        drawEqn(graph, Number(i));
-    }
-};
-
-// Clears canvas, and draws axes and grid
-export const resetAndDrawGrid = (graph: Graph) => {
-    resetGrid(graph);
-    Object.keys(graph.equations).forEach((key) => {
-        delete graph.equations[key];
-    });
-    Object.keys(graph.outputValues).forEach((key) => {
-        delete graph.outputValues[key];
-    });
-};
-
-// Graphs the equation
-export const drawEqn = (graph: Graph, index: number) => {
-    if (!graph.outputValues[index]) {
-        return;
-    }
-
-    const ctx = graph.canvas.getContext("2d");
-    const [_, startY] = coordToGraph(
-        graph.minX,
-        graph.outputValues[index][0],
-        graph
-    );
-    let drawing = false;
-    if (!isNaN(startY)) {
-        drawing = true;
-        ctx.beginPath();
-        ctx.moveTo(0, startY);
-    }
-    const step = graph.canvas.width / graph.outputValues[index].length;
-    let curX = 0;
-    for (const curY of graph.outputValues[index]) {
-        const [_, y] = coordToGraph(curX, curY, graph);
-        if (isNaN(y)) {
-            if (drawing) ctx.stroke();
-            drawing = false;
-        } else {
-            if (!drawing) ctx.beginPath();
-            ctx.lineTo(curX, isNaN(y) ? coordToGraph(0, 0, graph)[1] : y);
+        let drawing = false;
+        if (!isNaN(startY)) {
             drawing = true;
+            ctx.beginPath();
+            ctx.moveTo(0, startY);
         }
-        curX += step;
+        const step = this.canvas.width / this.outputValues[index].length;
+        let curX = 0;
+        for (const curY of this.outputValues[index]) {
+            const [_, y] = this.coordToGraph(curX, curY);
+            if (isNaN(y)) {
+                if (drawing) ctx.stroke();
+                drawing = false;
+            } else {
+                if (!drawing) ctx.beginPath();
+                ctx.lineTo(curX, isNaN(y) ? this.coordToGraph(0, 0)[1] : y);
+                drawing = true;
+            }
+            curX += step;
+        }
+        ctx.stroke();
     }
-    ctx.stroke();
-};
 
-// ***** Helpers *****
+    // ***** Helpers *****
 
-// Recalculates for all the graphs
-const runAllGraphs = (graph: Graph) => {
-    for (let i of Object.keys(graph.equations)) runGraph(graph, Number(i));
-};
+    // Recalculates for all the graphs
+    runAllGraphs() {
+        for (let i of Object.keys(this.equations)) this.runGraph(Number(i));
+    }
 
-// Resize proportionally based on given width
-const resizeProportionally = (graph: Graph, halfWidth: number) => {
-    const mid = (graph.minY + graph.maxY) / 2;
-    const halfHeight =
-        (halfWidth / (graph.canvas.width || 0)) * graph.canvas.height;
-    graph.minX = -halfWidth;
-    graph.maxX = halfWidth;
-    graph.minY = mid - halfHeight;
-    graph.maxY = mid + halfHeight;
-};
+    // Resize proportionally based on given width
+    resizeProportionally = (halfWidth: number) => {
+        const mid = (this.minY + this.maxY) / 2;
+        const halfHeight =
+            (halfWidth / (this.canvas.width || 0)) * this.canvas.height;
+        this.minX = -halfWidth;
+        this.maxX = halfWidth;
+        this.minY = mid - halfHeight;
+        this.maxY = mid + halfHeight;
+    };
 
-// Resets the canvas inner size to the outer size
-const resizeGraph = (graph: Graph) => {
-    graph.canvas.width = graph.canvas.clientWidth;
-    graph.canvas.height = graph.canvas.clientHeight;
-    resizeProportionally(graph, 3);
-    redraw(graph);
-};
+    // Resets the canvas inner size to the outer size
+    resizeGraph() {
+        this.canvas.width = this.canvas.clientWidth;
+        this.canvas.height = this.canvas.clientHeight;
+        this.resizeProportionally(3);
+        this.redraw();
+    }
 
-// Converts math coordinates to on-screen pixel coordinates
-const coordToGraph = (x: number, y: number, graph: Graph) => {
-    return [
-        ((x - graph.minX) * graph.canvas.width) / (graph.maxX - graph.minX),
-        ((graph.maxY - y) * graph.canvas.height) / (graph.maxY - graph.minY),
-    ];
-};
+    // Converts math coordinates to on-screen pixel coordinates
+    coordToGraph(x: number, y: number) {
+        return [
+            ((x - this.minX) * this.canvas.width) / (this.maxX - this.minX),
+            ((this.maxY - y) * this.canvas.height) / (this.maxY - this.minY),
+        ];
+    }
 
-const graphToCoord = (x: number, y: number, graph: Graph) => {
-    return [
-        (x * (graph.maxX - graph.minX)) / graph.canvas.width + graph.minX,
-        graph.maxY - (y * (graph.maxY - graph.minY)) / graph.canvas.height,
-    ];
-};
+    graphToCoord(x: number, y: number) {
+        return [
+            (x * (this.maxX - this.minX)) / this.canvas.width + this.minX,
+            this.maxY - (y * (this.maxY - this.minY)) / this.canvas.height,
+        ];
+    }
 
-// Returns the step-size used in the WASM module
-const getStep = (graph: Graph) => {
-    const resolution = 2; // pixels
-    return (resolution / graph.canvas.width) * (graph.maxX - graph.minX);
-};
+    // Returns the step-size used in the WASM module
+    getStep() {
+        const resolution = 2;
+        return (resolution / this.canvas.width) * (this.maxX - this.minX);
+    }
 
-const resetGrid = (graph: Graph) => {
-    const ctx = graph.canvas.getContext("2d");
-    ctx.clearRect(0, 0, graph.canvas.width, graph.canvas.height);
-    const [xint, yint] = coordToGraph(0, 0, graph);
-    ctx.lineWidth = 3;
+    resetGrid() {
+        const ctx = this.canvas.getContext("2d");
+        ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        const [xint, yint] = this.coordToGraph(0, 0);
+        ctx.lineWidth = 3;
 
-    ctx.beginPath();
-    ctx.moveTo(0, yint);
-    ctx.lineTo(graph.canvas.width, yint);
-    ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(0, yint);
+        ctx.lineTo(this.canvas.width, yint);
+        ctx.stroke();
 
-    ctx.beginPath();
-    ctx.moveTo(xint, 0);
-    ctx.lineTo(xint, graph.canvas.height);
-    ctx.stroke();
-};
+        ctx.beginPath();
+        ctx.moveTo(xint, 0);
+        ctx.lineTo(xint, this.canvas.height);
+        ctx.stroke();
+    }
+}
