@@ -1,6 +1,10 @@
 :root {
     --panel-length: 400px;
     --saved-panel-length: 400px;
+    --min-portrait-panel-height: 150px;
+    --min-landscape-panel-width: 300px;
+    --default-portrait-panel-height: 400px;
+    --default-landscape-panel-width: 400px;
     --light-text: #f3f3f3;
     --dark-text: #001111;
     --light-line: #999900;

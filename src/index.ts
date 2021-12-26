@@ -1,4 +1,8 @@
-import { setupIconButtons, setupSideBar } from "./eventHandler";
+import {
+    setupIconButtons,
+    setupOnWindowResize,
+    setupSideBar,
+} from "./eventHandler";
 import { Graph } from "./graph";
 
 const initialize = () => {
@@ -27,6 +31,7 @@ const initWasm = (graph: Graph) => {
 
 const setUpElementEvents = (graph: Graph) => {
     setupIconButtons(graph);
+    setupOnWindowResize(graph);
     setupSideBar(graph);
 };
 
