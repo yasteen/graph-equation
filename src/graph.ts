@@ -1,4 +1,4 @@
-import { initializeCanvasResizeListeners } from "./eventHandler";
+import { initializeCanvasScrolling } from "./eventHandler";
 
 export class Graph {
     minX: number;
@@ -20,7 +20,7 @@ export class Graph {
         this.canvas = canvas;
         this.outputValues = {};
 
-        initializeCanvasResizeListeners(this);
+        initializeCanvasScrolling(this);
     }
 
     // Runs the WASM function on the given equation

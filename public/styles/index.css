@@ -39,6 +39,9 @@ body {
     padding: 5px;
     font-size: 25pt;
 }
+.icon div:hover {
+    cursor: pointer;
+}
 
 .container {
     display: flex;
