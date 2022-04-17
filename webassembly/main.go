@@ -3,7 +3,8 @@ package main
 import (
 	"syscall/js"
 
-	"github.com/yasteen/go-parse/types/mathgroups/real"
+	"github.com/yasteen/go-parse/mathgroups/real"
+	"github.com/yasteen/go-parse/run"
 )
 
 func graph(this js.Value, args []js.Value) interface{} {
@@ -12,7 +13,7 @@ func graph(this js.Value, args []js.Value) interface{} {
 	step := args[2].Float()
 	end := args[3].Float()
 	variableName := args[4].String()
-	ans, err := real.MapValues(expression, *real.NewRealInterval(start, step, end), variableName)
+	ans, err := run.GetRunnableMathGroup(real.Real).MapValues(expression, *real.NewInterval(start, step, end), variableName)
 	if err != nil {
 		alert := js.Global().Get("alert")
 		alert.Invoke("Error: " + err.Error())
