@@ -38,7 +38,7 @@ const updateLayout = (
 };
 
 export const setupOnWindowResize = (graph: Graph) => {
-    var doResize: number;
+    var doResize: NodeJS.Timeout;
     var isPrevLandscape: "landscape" | "portrait" | "force" = "force";
     window.addEventListener("resize", () => {
         clearTimeout(doResize);
@@ -102,7 +102,7 @@ export const setupSideBar = (graph: Graph) => {
 const setupResizeBar = (graph: Graph) => {
     const BORDER_WIDTH = 4;
     const sideBar = document.getElementById("equation-panel") as HTMLDivElement;
-    var doResize: number;
+    var doResize: NodeJS.Timeout;
 
     let m_pos: number;
     const resize = (e: MouseEvent) => {

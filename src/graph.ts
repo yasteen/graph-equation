@@ -11,8 +11,8 @@ export class Graph {
     outputValues: { [index: number]: number[] };
 
     constructor(canvas: HTMLCanvasElement) {
-        this.minX = -1;
-        this.maxX = 1;
+        this.minX = -3;
+        this.maxX = 3;
         this.minY = -1;
         this.maxY = 1;
         this.equations = {};
@@ -37,7 +37,10 @@ export class Graph {
             );
             this.drawEqn(index);
         } else {
-            console.error("Failed to detect WASM graph function");
+            console.error(
+                "Failed to detect WASM graph function",
+                window["graph"]
+            );
         }
     }
 
@@ -102,20 +105,21 @@ export class Graph {
 
     // Resize proportionally based on given width
     resizeProportionally = (halfWidth: number) => {
-        const mid = (this.minY + this.maxY) / 2;
+        const midX = (this.minX + this.maxX) / 2;
+        const midY = (this.minY + this.maxY) / 2;
         const halfHeight =
-            (halfWidth / (this.canvas.width || 0)) * this.canvas.height;
-        this.minX = -halfWidth;
-        this.maxX = halfWidth;
-        this.minY = mid - halfHeight;
-        this.maxY = mid + halfHeight;
+            (halfWidth / (this.canvas.width || 1)) * this.canvas.height;
+        this.minX = midX - halfWidth;
+        this.maxX = midX + halfWidth;
+        this.minY = midY - halfHeight;
+        this.maxY = midY + halfHeight;
     };
 
     // Resets the canvas inner size to the outer size
     resizeGraph() {
         this.canvas.width = this.canvas.clientWidth;
         this.canvas.height = this.canvas.clientHeight;
-        this.resizeProportionally(3);
+        this.resizeProportionally((this.maxX - this.minX) / 2);
         this.redraw();
     }
 
@@ -154,6 +158,13 @@ export class Graph {
         ctx.beginPath();
         ctx.moveTo(xint, 0);
         ctx.lineTo(xint, this.canvas.height);
+        ctx.stroke();
+
+        ctx.beginPath();
+        const c1 = this.coordToGraph(1, 0.1);
+        const c2 = this.coordToGraph(1, -0.1);
+        ctx.moveTo(c1[0], c1[1]);
+        ctx.lineTo(c2[0], c2[1]);
         ctx.stroke();
     }
 }

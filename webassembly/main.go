@@ -18,7 +18,12 @@ func graph(this js.Value, args []js.Value) interface{} {
 		alert := js.Global().Get("alert")
 		alert.Invoke("Error: " + err.Error())
 	}
-	return ans
+
+	a := []interface{}{}
+	for _, val := range ans {
+		a = append(a, val)
+	}
+	return a
 }
 
 func main() {
